@@ -7,6 +7,8 @@ from noise_gen import add_noise
 from params import params
 from images_to_video import images_to_video, add_audio
 
+import time
+start_time = time.time()
 
 # returns first channel
 def get_amplitudes(file):
@@ -33,17 +35,11 @@ def space_array(array, spacers):
 # splits array into smaller arrays of size items_split
 # throws out scragglers at the end if array can't be evenly split
 def split_array(a, items_split):
-    n_splits = int(len(a)/items_split)
+    n_splits = len(a)//items_split
     splits = []
     for _ in range(n_splits):
         splits.append(a[len(splits)*items_split:(len(splits)+1)*items_split])
     return splits
-
-
-# make mean 0
-def zero_at_mean(a):
-    mean_a = int(np.mean(a))
-    return [b - mean_a for b in a]
 
 
 def zero_at_b(a, b):
@@ -83,15 +79,11 @@ def add_wave(amps, spacers, offset, image, draw, x_shift, y_shift):
     return image
 
 
-def build_album_cover(amps, start, num, n_data_needed, mean_amps, im_width, im_height):
+def build_album_cover(amps, start, n_data_needed, im_width, im_height):
 
     amps = amps[start: start+n_data_needed]
 
     splits = split_array(amps, params['data_line'])
-    # splits = [zero_at_mean(s) for s in splits]
-
-    # NOTE: doing below creates issue with uneven spacing
-    # splits = [zero_at_b(s, mean_amps) for s in splits]
 
     n_waves = len(splits)
     offset = params['offset']
@@ -99,14 +91,14 @@ def build_album_cover(amps, start, num, n_data_needed, mean_amps, im_width, im_h
     im = Image.new('1', (im_width, im_height))
     draw = ImageDraw.Draw(im)
 
-    x_shift = int(im_width/4)
-    y_shift = int((im_height-(offset*n_waves))/2)
+    x_shift = im_width//4
+    y_shift = (im_height-(offset*n_waves))//2
 
-    for i in range(len(splits)):
+    for i in range(n_waves):
         im = add_wave(splits[i], params['spacers'], offset*(i), im, draw, x_shift, y_shift)
 
     save = params['save_loc'].split('.')
-    save = save[0]+str(num)+'.'+save[-1]
+    save = save[0]+str(start)+'.'+save[-1]
 
     im.save(save)
     return save
@@ -115,25 +107,30 @@ def build_album_cover(amps, start, num, n_data_needed, mean_amps, im_width, im_h
 file = params['file'] if len(sys.argv) < 2 else sys.argv[1]
 rate, amps = get_amplitudes(file)
 frame_rate = params['fps']
+# both are ints so using // should return an int
+rate_div_fps = rate//frame_rate
+# the number of items (frames) in iteration_list is determined by
+# items < len(amps)/rate_div_fps or len(amps)//rate_div_fps
+# so..
+n_frames = len(amps)//rate_div_fps
+iteration_list = [i*rate_div_fps for i in range(n_frames)]
 
-itteration_list = range(len(amps))
-itteration_list = [int(b*(rate/frame_rate)) for b in itteration_list if int(b*(rate/frame_rate)) < len(amps)]
-total = len(itteration_list)
-print("BUILDING {} IMAGES".format(total))
+print("BUILDING {} IMAGES".format(n_frames))
 
 # precalculate some things for build_album_cover
 n_data_needed = params['data_line']*params['n_lines']
-mean_amps = int(np.mean(amps))
 im_width = (params['spacers']+1)*(2*(params['noise_frac']*params['data_line'])+params['data_line'])*2
 im_height = int(im_width/0.85)
 
 filenames = []
 
-for i, loc in zip(itteration_list, range(len(itteration_list))):
-    filenames.append(build_album_cover(amps, i, i, n_data_needed, mean_amps, im_width, im_height))
-    print("BUILT:\t{}/{}".format(loc, total))
+for i, loc in zip(iteration_list, range(n_frames)):
+    filenames.append(build_album_cover(amps, i, n_data_needed, im_width, im_height))
+    print("BUILT:\t{}/{}".format(loc, n_frames))
 
 out_file = params['vid_save']
 
 out_file = images_to_video(filenames, out_file, frame_rate)
 add_audio(out_file, params['file'])
+
+print("EXEC TIME:\t{} seconds".format(time.time() - start_time))

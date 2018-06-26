@@ -5,7 +5,7 @@ from params import params
 # takes amp data and length of noise to add
 def add_noise(amps, mean, noise_len=None):
     if not noise_len:
-        noise_len = int(len(amps)/params['noise_frac'])
+        noise_len = len(amps)//params['noise_frac']
     start = amps[0]
     end = amps[-1]
 

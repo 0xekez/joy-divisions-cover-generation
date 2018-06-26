@@ -1,10 +1,10 @@
 params = {
 # file to load wav from
-'file': 'wavs/waves.wav',
+'file': 'C:/Users/qweis/Documents/GitHub/unknown-pleasures/wavs/ashcroft_targets.wav',
 # output file for images
 'save_loc': 'covers/frame.png',
 # save location for video
-'vid_save': 'waves_30fps.mp4',
+'vid_save': 'time_test.mp4',
 # number of spacers between each data point
 'spacers': 5,
 # number of pixels added as offset per wave
