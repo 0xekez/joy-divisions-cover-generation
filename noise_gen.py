@@ -2,10 +2,13 @@ import numpy as np
 from params import params
 
 
-# takes amp data and length of noise to add
-def add_noise(amps, mean, noise_len=None):
-    if not noise_len:
-        noise_len = len(amps)//params['noise_frac']
+def add_noise(amps, mean):
+    '''
+    adds noise and connecting lines to data
+    IN: data, mean of data
+    OUT: data combined with connecting lines and noise
+    '''
+    noise_len = len(amps)//params['noise_frac']
     start = amps[0]
     end = amps[-1]
 
@@ -26,6 +29,12 @@ def add_noise(amps, mean, noise_len=None):
 
 
 def get_connecting_line(start, end, target_slope, min_ticks):
+    '''
+    calculates the values for a connecting line
+    IN: where the line should start, where the line should end, ideal slope,
+        the minimum amount of ticks to get to the end
+    OUT: list of amplitude values for connecting line
+    '''
     # handle case where start and end are functionally the same:
     if(int(start) == int(end)):
         return []
@@ -44,7 +53,7 @@ def get_connecting_line(start, end, target_slope, min_ticks):
         target_slope = target_slope*(-1)
 
     # whichever has the smallest diff from 0 has slowest slope
-    if abs(target_slope) >= abs(min_slope):
+    if abs(target_slope-min_slope) >= 0:
         slope = target_slope
     else:
         slope = min_slope
@@ -57,6 +66,13 @@ def get_connecting_line(start, end, target_slope, min_ticks):
 
 
 def add_random_noise(list, range):
+    '''
+    adds random noise to list of amplitudes
+    IN: amplitude data, how much range does the noise have
+    OUT: data with noise added
+    TODD: casting between np.array and list takes lots of time, probably faster
+          alt that involves python random lib
+    '''
     min = 0-range/2
     max = 0+range/2
     a = np.array(list)

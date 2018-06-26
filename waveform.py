@@ -30,7 +30,7 @@ def get_amplitudes(file):
 
 def split_array(a, items_split):
     '''
-    returns max num of lists of size items_split from a
+    returns max num of lists of size items_split from input list
     IN: array to be split, number of items in each split
     OUT: list of splits [list of lists]
     WARNING: throws out scragglers if items_split doesnt go evenly into input
@@ -53,7 +53,7 @@ def zero_at_b(a, b):
 
 def add_wave(amps, y_offset, image, draw, x_shift, indexes, x_cords):
     '''
-    adds a wave to given image build from given data with given offsets
+    adds a wave to given image. build from given data with given offsets
     IN: amplitude data, y offset, image, draw obj for image, x offset,
         places to index amps, unadjusted x cords for drawing
     NOTE: indexes and x_cords are passed only to make program faster
