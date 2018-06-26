@@ -1,6 +1,5 @@
 from scipy.io import wavfile
 import numpy as np
-import sys
 from PIL import Image, ImageDraw
 
 from noise_gen import add_noise
@@ -118,8 +117,7 @@ def build_album_cover(amps, loc, im_width, im_height, indexes, x_cords):
     return save
 
 
-file = params['file'] if len(sys.argv) < 2 else sys.argv[1]
-rate, amps = get_amplitudes(file)
+rate, amps = get_amplitudes(params['file'])
 frame_rate = params['fps']
 
 # both are ints so using // should return an int

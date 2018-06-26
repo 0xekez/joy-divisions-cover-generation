@@ -1,6 +1,6 @@
 params = {
     # file to load wav from
-    'file': 'C:/Users/qweis/Documents/GitHub/unknown-pleasures/wavs/ashcroft_targets.wav',
+    'file': 'C:/Users/qweis/Documents/GitHub/unknown-pleasures/wavs/famous.wav',
     # output file for images
     'save_loc': 'covers/frame.png',
     # save location for video
@@ -26,5 +26,5 @@ params = {
     # thickness of waveform lines
     'line_width': 3,
     # value to scale amplitudes to
-    'scale_val' : 125,
+    'scale_val': 125,
 }
