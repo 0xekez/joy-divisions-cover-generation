@@ -16,5 +16,7 @@
 If I had thought about naming my files things that made sense earlier the files would be names differently, but I didn't so here is a breif explanation of where everything is:
 
 `waveform.py` has the meat of the program. It does the image generation and calls all the other files.
+
 `noise_gen.py` handles the stuff that doesn't respond to the amplitude data. It adds all the trailing lines to the data.
+
 `images_to_video.py` handles converting the generated images into videos and gifs. The code is currently setup to output a .mp4 but with some minor mods it can ouput a gif.
