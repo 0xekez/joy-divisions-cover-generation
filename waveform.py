@@ -10,26 +10,22 @@ from images_to_video import images_to_video, add_audio
 import time
 start_time = time.time()
 
-# returns first channel
+
 def get_amplitudes(file):
+    '''
+    gets audio data from file
+    IN: filename
+    OUT: sample rate (bits/sec) [int], first channel amplitudes [list of ints]
+    '''
     rate, data = wavfile.read(file)
 
-    # normalize values between 0 and 200
+    # normalize values between 0 and 125
     norm_data = np.copy(data)
     norm_data = norm_data/(norm_data.max()/125)
 
     list = np.ndarray.tolist(norm_data.astype(int))
     print("GOT\t{}".format(file))
     return rate, list if isinstance(list[0], int) else [l[0] for l in list]
-
-
-# returns new array with spacer Nones betwen each element
-def space_array(array, spacers):
-    b = []
-    spacer = [None for _ in range(spacers)]
-    for item in array:
-        b.extend([item]+spacer)
-    return b
 
 
 # splits array into smaller arrays of size items_split
@@ -47,41 +43,42 @@ def zero_at_b(a, b):
 
 
 # add a wave to an image, with a given offset from the top
-def add_wave(amps, spacers, offset, image, draw, x_shift, y_shift):
+def add_wave(amps, offset, image, draw, x_shift, y_shift, indexes, x_cords):
     # add noise
     mean = np.mean(amps)
     amps = add_noise(amps, mean)
     amps = zero_at_b(amps, mean)
-    # space out amps
-    spaced_amps = space_array(amps, spacers)
 
     max_y_amps = max(amps)+params['offset']
+    # for x in range(0, len(amps)*(spacers+1)-spacers-1, spacers+1):
+    for i, x in zip(indexes, x_cords):
 
-    for x in range(len(spaced_amps)-spacers-1):
-        if spaced_amps[x]:
+        line_start_x = x + x_shift
+        line_start_y = offset + amps[i] + y_shift
+        line_end_x = x + params['spacers'] + 1 + x_shift
+        line_end_y = offset + amps[i+1] + y_shift
 
-            line_start_x = x + x_shift
-            line_start_y = offset + spaced_amps[x] + y_shift
-            line_end_x = x + spacers + 1 + x_shift
-            line_end_y = offset + spaced_amps[x + spacers + 1] + y_shift
+        polygon_bottom_y = 3*offset+max_y_amps + y_shift
 
-            polygon_bottom_y = 3*offset+max_y_amps + y_shift
-
-            draw.polygon((
+        draw.polygon(
+                        (
                             (line_start_x, line_start_y),
                             (line_end_x, line_end_y),
                             (line_end_x, polygon_bottom_y),
-                            (line_start_x, polygon_bottom_y)),
-                            fill=0, outline=0)
-            draw.line((line_start_x, line_start_y, line_end_x, line_end_y),
-                        fill=255, width=params['line_width'])
+                            (line_start_x, polygon_bottom_y)
+                        ),
+                        fill=0,
+                        outline=0)
+        draw.line(
+                    (line_start_x, line_start_y, line_end_x, line_end_y),
+                    fill=255,
+                    width=params['line_width']
+                  )
 
     return image
 
 
-def build_album_cover(amps, start, n_data_needed, im_width, im_height):
-
-    amps = amps[start: start+n_data_needed]
+def build_album_cover(amps, start, loc, im_width, im_height, indexes, x_cords):
 
     splits = split_array(amps, params['data_line'])
 
@@ -95,10 +92,10 @@ def build_album_cover(amps, start, n_data_needed, im_width, im_height):
     y_shift = (im_height-(offset*n_waves))//2
 
     for i in range(n_waves):
-        im = add_wave(splits[i], params['spacers'], offset*(i), im, draw, x_shift, y_shift)
+        im = add_wave(splits[i], offset*(i), im, draw, x_shift, y_shift, indexes, x_cords)
 
     save = params['save_loc'].split('.')
-    save = save[0]+str(start)+'.'+save[-1]
+    save = save[0]+str(loc)+'.'+save[-1]
 
     im.save(save)
     return save
@@ -107,11 +104,12 @@ def build_album_cover(amps, start, n_data_needed, im_width, im_height):
 file = params['file'] if len(sys.argv) < 2 else sys.argv[1]
 rate, amps = get_amplitudes(file)
 frame_rate = params['fps']
+
 # both are ints so using // should return an int
 rate_div_fps = rate//frame_rate
+
 # the number of items (frames) in iteration_list is determined by
 # items < len(amps)/rate_div_fps or len(amps)//rate_div_fps
-# so..
 n_frames = len(amps)//rate_div_fps
 iteration_list = [i*rate_div_fps for i in range(n_frames)]
 
@@ -122,10 +120,14 @@ n_data_needed = params['data_line']*params['n_lines']
 im_width = (params['spacers']+1)*(2*(params['noise_frac']*params['data_line'])+params['data_line'])*2
 im_height = int(im_width/0.85)
 
+# precalculate the indexes and x cords for drawing for add_wave
+indexes = range(0, (params['data_line']*(2*params['noise_frac']+1)-1))
+x_cords = [i*(params['spacers']+1) for i in indexes]
+
 filenames = []
 
 for i, loc in zip(iteration_list, range(n_frames)):
-    filenames.append(build_album_cover(amps, i, n_data_needed, im_width, im_height))
+    filenames.append(build_album_cover(amps[i:i+n_data_needed], i, loc, im_width, im_height, indexes, x_cords))
     print("BUILT:\t{}/{}".format(loc, n_frames))
 
 out_file = params['vid_save']
