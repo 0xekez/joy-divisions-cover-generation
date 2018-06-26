@@ -19,18 +19,22 @@ def get_amplitudes(file):
     '''
     rate, data = wavfile.read(file)
 
-    # normalize values between 0 and 125
+    # normalize values between 0 and params['scale_val']
     norm_data = np.copy(data)
-    norm_data = norm_data/(norm_data.max()/125)
+    norm_data = norm_data/(norm_data.max()/params['scale_val'])
 
     list = np.ndarray.tolist(norm_data.astype(int))
     print("GOT\t{}".format(file))
     return rate, list if isinstance(list[0], int) else [l[0] for l in list]
 
 
-# splits array into smaller arrays of size items_split
-# throws out scragglers at the end if array can't be evenly split
 def split_array(a, items_split):
+    '''
+    returns max num of lists of size items_split from a
+    IN: array to be split, number of items in each split
+    OUT: list of splits [list of lists]
+    WARNING: throws out scragglers if items_split doesnt go evenly into input
+    '''
     n_splits = len(a)//items_split
     splits = []
     for _ in range(n_splits):
@@ -39,26 +43,34 @@ def split_array(a, items_split):
 
 
 def zero_at_b(a, b):
+    '''
+    makes b 0 of input list a
+    IN: list to be adjusted, value to be new zero
+    OUT: adjusted list
+    '''
     return [c-b for c in a]
 
 
-# add a wave to an image, with a given offset from the top
-def add_wave(amps, offset, image, draw, x_shift, y_shift, indexes, x_cords):
+def add_wave(amps, y_offset, image, draw, x_shift, indexes, x_cords):
+    '''
+    adds a wave to given image build from given data with given offsets
+    IN: amplitude data, y offset, image, draw obj for image, x offset,
+        places to index amps, unadjusted x cords for drawing
+    NOTE: indexes and x_cords are passed only to make program faster
+    '''
     # add noise
     mean = np.mean(amps)
     amps = add_noise(amps, mean)
     amps = zero_at_b(amps, mean)
 
-    max_y_amps = max(amps)+params['offset']
-    # for x in range(0, len(amps)*(spacers+1)-spacers-1, spacers+1):
     for i, x in zip(indexes, x_cords):
 
         line_start_x = x + x_shift
-        line_start_y = offset + amps[i] + y_shift
-        line_end_x = x + params['spacers'] + 1 + x_shift
-        line_end_y = offset + amps[i+1] + y_shift
+        line_start_y = y_offset + amps[i]
+        line_end_x = x + params['spacers'] + x_shift
+        line_end_y = y_offset + amps[i+1]
 
-        polygon_bottom_y = 3*offset+max_y_amps + y_shift
+        polygon_bottom_y = y_offset+params['scale_val']
 
         draw.polygon(
                         (
@@ -78,8 +90,13 @@ def add_wave(amps, offset, image, draw, x_shift, y_shift, indexes, x_cords):
     return image
 
 
-def build_album_cover(amps, start, loc, im_width, im_height, indexes, x_cords):
-
+def build_album_cover(amps, loc, im_width, im_height, indexes, x_cords):
+    '''
+    builds an ablum cover image that is later used as a frame
+    IN: amplitude data, what number frame, width of image, height of image,
+        indexes for passing to add_wave, x_cords for same reason
+    OUT: the save location of the frame
+    '''
     splits = split_array(amps, params['data_line'])
 
     n_waves = len(splits)
@@ -92,7 +109,7 @@ def build_album_cover(amps, start, loc, im_width, im_height, indexes, x_cords):
     y_shift = (im_height-(offset*n_waves))//2
 
     for i in range(n_waves):
-        im = add_wave(splits[i], offset*(i), im, draw, x_shift, y_shift, indexes, x_cords)
+        im = add_wave(splits[i], offset*(i)+y_shift, im, draw, x_shift, indexes, x_cords)
 
     save = params['save_loc'].split('.')
     save = save[0]+str(loc)+'.'+save[-1]
@@ -127,7 +144,7 @@ x_cords = [i*(params['spacers']+1) for i in indexes]
 filenames = []
 
 for i, loc in zip(iteration_list, range(n_frames)):
-    filenames.append(build_album_cover(amps[i:i+n_data_needed], i, loc, im_width, im_height, indexes, x_cords))
+    filenames.append(build_album_cover(amps[i:i+n_data_needed], loc, im_width, im_height, indexes, x_cords))
     print("BUILT:\t{}/{}".format(loc, n_frames))
 
 out_file = params['vid_save']
