@@ -1,2 +1,2 @@
-# joy division cover generation
+# Joy Division Cover Generation
 ![example](example.gif)
