@@ -5,6 +5,8 @@
 ## How It Works
 1. Grab amplitude date from .wav file
 2. Use Pillow and some math to build images
+3. Merge images to video with open cv2
+4. Merge audio and video with ffmpeg - you'll need ffmpeg installed to run the code
 
 ## How To Use
 1. Download to your computer
