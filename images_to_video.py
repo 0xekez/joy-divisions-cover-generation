@@ -1,5 +1,10 @@
 # take filenames and output filename
 def images_to_video(filenames, output, fps):
+    '''
+    builds a video from a list of images
+    IN: list of filenames for images, where to output, , frames per second
+    OUT: filename for output video
+    '''
     from cv2 import VideoWriter, VideoWriter_fourcc, imread, destroyAllWindows
 
     print("CREATING VIDEO")
@@ -22,6 +27,12 @@ def images_to_video(filenames, output, fps):
 
 
 def add_audio(video, audio):
+    '''
+    combines audio and visual channels into new .mp4
+    IN: video filename, audio filename
+    OUT: saves a video to auio_+video_filename
+    WARNING: this is where code is bad, you need ffmpeg installed for it to work
+    '''
     import subprocess
     print("ADDING AUDIO")
     cmd = "ffmpeg -i {} -i {} -vcodec copy audio_{}".format(video, audio, video)
@@ -32,6 +43,10 @@ def add_audio(video, audio):
 # duration specifies the number of seconds between frames
 # lowest supported value is 0.1 I think
 def create_gif(filenames, output, duration):
+    '''
+    IN: filenames to build gif from, where to save gif, time between frames
+    OUT: saves a .gif to the requested output
+    '''
     import imageio
     print("BUILDING GIF")
     images = []
@@ -41,6 +56,11 @@ def create_gif(filenames, output, duration):
 
 
 def video_from_folder(folder, output, fps):
+    '''
+    builds a video from all the .pngs in a folder
+    IN: folder, output location, frames per second
+    OUT: save location
+    '''
     print("GETTING .PNG FROM:\t{}".format(folder))
     import os
     filenames = os.listdir('covers')
