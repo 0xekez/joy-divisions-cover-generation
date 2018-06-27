@@ -53,7 +53,7 @@ def get_connecting_line(start, end, target_slope, min_ticks):
         target_slope = target_slope*(-1)
 
     # whichever has the smallest diff from 0 has slowest slope
-    if abs(target_slope-min_slope) >= 0:
+    if abs(target_slope) >= abs(min_slope):
         slope = target_slope
     else:
         slope = min_slope
