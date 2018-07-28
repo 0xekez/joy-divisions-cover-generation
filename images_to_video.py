@@ -63,7 +63,7 @@ def video_from_folder(folder, output, fps):
     '''
     print("GETTING .PNG FROM:\t{}".format(folder))
     import os
-    filenames = os.listdir('covers')
+    filenames = os.listdir(folder)
 
     for fichier in filenames[:]:  # filelist[:] makes a copy of filelist.
         if not(fichier.endswith(".png")):
