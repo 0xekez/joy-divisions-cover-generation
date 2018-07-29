@@ -75,7 +75,7 @@ def video_from_folder(folder, output, fps):
     fourcc = VideoWriter_fourcc(*'mp4v')
     vid = None
     for file in filenames:
-        img = imread("covers/"+file)
+        img = imread("{}/{}".format(folder, file))
         # now that we have an image we can setup vid
         if vid is None:
             size = img.shape[1], img.shape[0]
